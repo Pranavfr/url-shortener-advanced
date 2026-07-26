@@ -107,7 +107,8 @@ export const generateQR = async (req: any, res: Response): Promise<void> => {
             return;
         }
 
-        const fullUrl = `http://localhost:5000/${url.shortCode}`; // In production, use env var
+        const baseUrl = process.env.BASE_URL || 'http://localhost:5000';
+        const fullUrl = `${baseUrl}/${url.shortCode}`; // In production, use env var
         const qrCodeDataUrl = await QRCode.toDataURL(fullUrl);
         
         res.json({ qrCode: qrCodeDataUrl });

@@ -41,6 +41,7 @@ export default function Analytics() {
     // Device counts
     const desktopClicks = logs.filter((l: any) => l.device === 'Desktop').length;
     const mobileClicks = logs.filter((l: any) => l.device === 'Mobile').length;
+    const baseUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/api$/, '') : 'http://localhost:5000';
 
     return (
         <div className="py-8">
@@ -51,8 +52,8 @@ export default function Analytics() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-white">Analytics</h1>
-                    <a href={`http://localhost:5000/${url.shortCode}`} target="_blank" rel="noreferrer" className="text-primary hover:underline mt-1 block">
-                        http://localhost:5000/{url.shortCode}
+                    <a href={`${baseUrl}/${url.shortCode}`} target="_blank" rel="noreferrer" className="text-primary hover:underline mt-1 block">
+                        {baseUrl.replace(/^https?:\/\//, '')}/{url.shortCode}
                     </a>
                 </div>
                 <div className="bg-slate-800/80 border border-slate-700 px-6 py-4 rounded-xl flex items-center shadow-lg">

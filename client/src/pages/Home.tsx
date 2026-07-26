@@ -16,7 +16,8 @@ export default function Home() {
         setShortUrl('');
         try {
             const res = await api.post('/url', { originalUrl, customAlias: customAlias || undefined });
-            setShortUrl(`http://localhost:5000/${res.data.shortCode}`);
+            const baseUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/api$/, '') : 'http://localhost:5000';
+            setShortUrl(`${baseUrl}/${res.data.shortCode}`);
         } catch (err: any) {
             setError(typeof err.response?.data?.error === 'string' ? err.response?.data?.error : 'Failed to generate short URL');
         } finally {

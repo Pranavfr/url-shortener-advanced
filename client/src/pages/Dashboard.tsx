@@ -61,7 +61,8 @@ export default function Dashboard() {
         }
     };
 
-    const getShortUrl = (code: string) => `http://localhost:5000/${code}`;
+    const baseUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/api$/, '') : 'http://localhost:5000';
+    const getShortUrl = (code: string) => `${baseUrl}/${code}`;
 
     return (
         <div className="py-8">
