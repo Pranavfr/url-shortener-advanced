@@ -38,6 +38,8 @@ model ClickLog {
   browser   String?
   device    String?
   country   String?
+  state     String?
+  city      String?
   ip        String?
   referrer  String?
   timestamp DateTime @default(now())

@@ -1,12 +1,16 @@
 import { useState } from 'react';
-import { Link2, Zap, Shield, BarChart3, ChevronRight, Copy, CheckCircle2 } from 'lucide-react';
+import { Link2, Zap, Shield, BarChart3, ChevronRight, Copy, CheckCircle2, Settings2, Lock, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import { QRCodeSVG } from 'qrcode.react';
 import api from '../services/api';
 
 export default function Home() {
     const [originalUrl, setOriginalUrl] = useState('');
     const [customAlias, setCustomAlias] = useState('');
+    const [password, setPassword] = useState('');
+    const [expiresAt, setExpiresAt] = useState('');
+    const [showAdvanced, setShowAdvanced] = useState(false);
     const [shortUrl, setShortUrl] = useState('');
     const [loading, setLoading] = useState(false);
     const [copied, setCopied] = useState(false);
@@ -16,7 +20,12 @@ export default function Home() {
         setLoading(true);
         setShortUrl('');
         try {
-            const res = await api.post('/url', { originalUrl, customAlias: customAlias || undefined });
+            const payload: any = { originalUrl };
+            if (customAlias) payload.customAlias = customAlias;
+            if (password) payload.password = password;
+            if (expiresAt) payload.expiresAt = expiresAt;
+
+            const res = await api.post('/url', payload);
             const baseUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/api$/, '') : 'http://localhost:5000';
             setShortUrl(`${baseUrl}/${res.data.shortCode}`);
             toast.success('Link shortened successfully!');
@@ -132,6 +141,54 @@ export default function Home() {
                                 )}
                             </motion.button>
                         </div>
+                        
+                        <div>
+                            <button 
+                                type="button" 
+                                onClick={() => setShowAdvanced(!showAdvanced)}
+                                className="flex items-center gap-2 text-zinc-400 hover:text-white text-sm font-medium transition"
+                            >
+                                <Settings2 size={16} /> 
+                                {showAdvanced ? 'Hide Advanced Options' : 'Advanced Options (Password, Expiry)'}
+                            </button>
+                            
+                            <AnimatePresence>
+                                {showAdvanced && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="overflow-hidden mt-4 space-y-4"
+                                    >
+                                        <div className="flex flex-col md:flex-row gap-4">
+                                            <div className="w-full md:w-1/2 flex items-center bg-zinc-950 border border-white/10 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500/50 transition-all">
+                                                <span className="pl-4 pr-3 text-zinc-500">
+                                                    <Lock size={18} />
+                                                </span>
+                                                <input 
+                                                    type="password" 
+                                                    placeholder="Set a password (optional)" 
+                                                    className="flex-1 w-full py-3 bg-transparent text-white focus:outline-none placeholder-zinc-700 text-sm font-medium" 
+                                                    value={password} 
+                                                    onChange={e => setPassword(e.target.value)} 
+                                                />
+                                            </div>
+                                            <div className="w-full md:w-1/2 flex items-center bg-zinc-950 border border-white/10 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500/50 transition-all">
+                                                <span className="pl-4 pr-3 text-zinc-500">
+                                                    <Clock size={18} />
+                                                </span>
+                                                <input 
+                                                    type="datetime-local" 
+                                                    className="flex-1 w-full py-3 pr-4 bg-transparent text-white focus:outline-none placeholder-zinc-700 text-sm font-medium [color-scheme:dark]" 
+                                                    value={expiresAt} 
+                                                    onChange={e => setExpiresAt(e.target.value)} 
+                                                />
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
                     </form>
 
                     <AnimatePresence>
@@ -142,22 +199,33 @@ export default function Home() {
                                 exit={{ opacity: 0, height: 0, marginTop: 0 }}
                                 className="overflow-hidden"
                             >
-                                <div className="p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4">
-                                    <div className="flex-1 truncate w-full text-center sm:text-left">
-                                        <p className="text-xs text-indigo-300 font-semibold uppercase tracking-wider mb-1">Your new link is ready</p>
-                                        <a href={shortUrl} target="_blank" rel="noopener noreferrer" className="text-xl font-bold text-white hover:text-indigo-400 transition truncate block">
+                                <div className="p-6 bg-indigo-500/10 border border-indigo-500/20 rounded-xl flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_0_30px_rgba(99,102,241,0.15)]">
+                                    <div className="flex-1 w-full text-center md:text-left">
+                                        <p className="text-xs text-indigo-300 font-semibold uppercase tracking-wider mb-2">Your new link is ready</p>
+                                        <a href={shortUrl} target="_blank" rel="noopener noreferrer" className="text-2xl font-bold text-white hover:text-indigo-400 transition truncate block mb-4">
                                             {shortUrl}
                                         </a>
+                                        <div className="flex justify-center md:justify-start gap-3">
+                                            <motion.button 
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                                onClick={handleCopy} 
+                                                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition ${copied ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white text-black hover:bg-zinc-200'}`}
+                                            >
+                                                {copied ? <CheckCircle2 size={18} /> : <Copy size={18} />}
+                                                {copied ? 'Copied' : 'Copy'}
+                                            </motion.button>
+                                            <a 
+                                                href={`/dashboard`}
+                                                className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition bg-white/10 hover:bg-white/20 text-white"
+                                            >
+                                                <BarChart3 size={18} /> Stats
+                                            </a>
+                                        </div>
                                     </div>
-                                    <motion.button 
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        onClick={handleCopy} 
-                                        className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition ${copied ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/10 hover:bg-white/20 text-white'}`}
-                                    >
-                                        {copied ? <CheckCircle2 size={18} /> : <Copy size={18} />}
-                                        {copied ? 'Copied' : 'Copy'}
-                                    </motion.button>
+                                    <div className="bg-white p-3 rounded-xl flex-shrink-0">
+                                        <QRCodeSVG value={shortUrl} size={100} fgColor="#000000" bgColor="#ffffff" level="Q" />
+                                    </div>
                                 </div>
                             </motion.div>
                         )}

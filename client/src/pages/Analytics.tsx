@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
-import { ArrowLeft, Globe, Monitor, BarChart2, MousePointerClick, Clock } from 'lucide-react';
+import { ArrowLeft, Globe, Monitor, BarChart2, MousePointerClick, Clock, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 import api from '../services/api';
@@ -54,6 +54,15 @@ export default function Analytics() {
     // Device counts
     const desktopClicks = logs.filter((l: any) => l.device === 'Desktop').length;
     const mobileClicks = logs.filter((l: any) => l.device === 'Mobile').length;
+    
+    // Top Countries
+    const countriesCount: Record<string, number> = {};
+    logs.forEach((log: any) => {
+        const c = log.country && log.country !== 'Unknown' ? log.country : 'Unknown';
+        countriesCount[c] = (countriesCount[c] || 0) + 1;
+    });
+    const topCountries = Object.entries(countriesCount).sort((a, b) => b[1] - a[1]).slice(0, 3);
+
     const baseUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/api$/, '') : 'http://localhost:5000';
 
     const containerVariants = {
@@ -210,6 +219,36 @@ export default function Analytics() {
                                 </div>
                             </div>
                         </div>
+
+                        <h3 className="text-lg font-bold mb-6 mt-8 text-white flex items-center pt-6 border-t border-white/5">
+                            <MapPin size={18} className="mr-2 text-emerald-400" /> Top Locations
+                        </h3>
+                        
+                        <div className="space-y-4">
+                            {topCountries.length > 0 ? topCountries.map(([country, count], i) => (
+                                <div key={country}>
+                                    <div className="flex justify-between items-end mb-2">
+                                        <div className="flex items-center text-zinc-300 font-medium">
+                                            {country}
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="font-bold text-white text-md">{count}</span>
+                                            <span className="text-zinc-500 text-xs ml-2">{totalClicks > 0 ? Math.round((count/totalClicks)*100) : 0}%</span>
+                                        </div>
+                                    </div>
+                                    <div className="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden border border-white/5">
+                                        <motion.div 
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${totalClicks > 0 ? (count/totalClicks)*100 : 0}%` }}
+                                            transition={{ duration: 1, delay: 0.8 + (i*0.1) }}
+                                            className="bg-emerald-500 h-full rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]"
+                                        />
+                                    </div>
+                                </div>
+                            )) : (
+                                <div className="text-sm text-zinc-500 text-center py-4">No location data yet</div>
+                            )}
+                        </div>
                     </div>
                 </motion.div>
             </div>
@@ -226,7 +265,7 @@ export default function Analytics() {
                         <thead>
                             <tr className="bg-zinc-900/30 border-b border-white/5">
                                 <th className="p-5 text-xs text-zinc-500 font-bold uppercase tracking-wider">Time</th>
-                                <th className="p-5 text-xs text-zinc-500 font-bold uppercase tracking-wider hidden sm:table-cell">IP Address</th>
+                                <th className="p-5 text-xs text-zinc-500 font-bold uppercase tracking-wider hidden sm:table-cell">Location & IP</th>
                                 <th className="p-5 text-xs text-zinc-500 font-bold uppercase tracking-wider">Browser</th>
                                 <th className="p-5 text-xs text-zinc-500 font-bold uppercase tracking-wider hidden md:table-cell">Referrer</th>
                             </tr>
@@ -241,7 +280,10 @@ export default function Analytics() {
                                     className="border-b border-white/5 hover:bg-zinc-800/30 transition-colors"
                                 >
                                     <td className="p-5 text-zinc-300 text-sm font-medium">{format(new Date(log.timestamp), 'MMM dd, yyyy HH:mm')}</td>
-                                    <td className="p-5 text-zinc-500 text-sm font-mono hidden sm:table-cell">{log.ip || 'Unknown'}</td>
+                                    <td className="p-5 hidden sm:table-cell">
+                                        <div className="text-zinc-300 text-sm">{log.city && log.city !== 'Unknown' ? `${log.city}, ` : ''}{log.state !== 'Unknown' ? log.state : log.country}</div>
+                                        <div className="text-zinc-500 text-xs font-mono">{log.ip || 'Unknown IP'}</div>
+                                    </td>
                                     <td className="p-5 text-zinc-300 text-sm">
                                         <div className="flex items-center gap-2">
                                             <Globe size={14} className="text-indigo-400" /> 
