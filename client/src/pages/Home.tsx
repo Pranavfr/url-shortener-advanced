@@ -1,104 +1,201 @@
 import { useState } from 'react';
-import { Link2, Zap, Shield, BarChart3 } from 'lucide-react';
+import { Link2, Zap, Shield, BarChart3, ChevronRight, Copy, CheckCircle2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 import api from '../services/api';
 
 export default function Home() {
     const [originalUrl, setOriginalUrl] = useState('');
     const [customAlias, setCustomAlias] = useState('');
     const [shortUrl, setShortUrl] = useState('');
-    const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [copied, setCopied] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setError('');
         setShortUrl('');
         try {
             const res = await api.post('/url', { originalUrl, customAlias: customAlias || undefined });
             const baseUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/api$/, '') : 'http://localhost:5000';
             setShortUrl(`${baseUrl}/${res.data.shortCode}`);
+            toast.success('Link shortened successfully!');
         } catch (err: any) {
-            setError(typeof err.response?.data?.error === 'string' ? err.response?.data?.error : 'Failed to generate short URL');
+            toast.error(typeof err.response?.data?.error === 'string' ? err.response?.data?.error : 'Failed to generate short URL');
         } finally {
             setLoading(false);
         }
     };
 
+    const handleCopy = () => {
+        navigator.clipboard.writeText(shortUrl);
+        setCopied(true);
+        toast.success('Copied to clipboard');
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    const containerVariants: any = {
+        hidden: { opacity: 0 },
+        show: {
+            opacity: 1,
+            transition: { staggerChildren: 0.1 }
+        }
+    };
+
+    const itemVariants: any = {
+        hidden: { opacity: 0, y: 20 },
+        show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
+    };
+
     return (
-        <div className="flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-3xl mx-auto mb-12">
-                <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-6 text-white drop-shadow-md">
-                    Shorten Your Links <br className="hidden sm:block" />
-                    <span className="text-primary bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">Fast and Secure</span>
-                </h1>
-                <p className="text-lg md:text-xl text-slate-300 mb-8">
-                    Create shortened URLs with custom aliases, track analytics, and generate QR codes in seconds.
-                </p>
-            </div>
+        <div className="flex flex-col items-center justify-center py-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
+            
+            {/* Background animated blobs */}
+            <div className="absolute top-20 left-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl opacity-50 animate-pulse pointer-events-none"></div>
+            <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl opacity-50 animate-pulse pointer-events-none" style={{ animationDelay: '2s' }}></div>
 
-            <div className="glass p-6 md:p-10 w-full max-w-2xl mb-16 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-accent"></div>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">Destination URL</label>
-                        <div className="flex shadow-sm rounded-md overflow-hidden">
-                            <span className="inline-flex items-center px-4 bg-slate-900 border border-r-0 border-slate-700 text-slate-400 rounded-l-md">
-                                <Link2 size={20} />
-                            </span>
-                            <input type="url" required placeholder="https://example.com/very/long/path" className="flex-1 block w-full px-4 py-3 bg-slate-900/50 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-primary rounded-none rounded-r-md placeholder-slate-500 transition" value={originalUrl} onChange={e => setOriginalUrl(e.target.value)} />
+            <motion.div 
+                variants={containerVariants}
+                initial="hidden"
+                animate="show"
+                className="text-center max-w-4xl mx-auto mb-16 relative z-10"
+            >
+                <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-sm text-zinc-300 mb-8 backdrop-blur-md">
+                    <span className="flex h-2 w-2 relative">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                    </span>
+                    QuickLink v2.0 is now live
+                </motion.div>
+                
+                <motion.h1 variants={itemVariants} className="text-6xl md:text-7xl font-extrabold tracking-tighter mb-6 text-white drop-shadow-2xl leading-tight">
+                    Shorten links like <br className="hidden md:block" />
+                    <span className="text-gradient">never before.</span>
+                </motion.h1>
+                <motion.p variants={itemVariants} className="text-lg md:text-xl text-zinc-400 mb-10 max-w-2xl mx-auto font-medium">
+                    A beautiful, lightning-fast URL shortener powered by custom C++ Data Structures. Track clicks, generate QR codes, and manage your links in style.
+                </motion.p>
+            </motion.div>
+
+            <motion.div 
+                initial={{ opacity: 0, y: 40, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ type: 'spring', stiffness: 200, damping: 20, delay: 0.3 }}
+                className="glass-panel p-2 w-full max-w-3xl mb-24 relative z-10 shadow-2xl shadow-indigo-500/10"
+            >
+                <div className="bg-zinc-900/80 rounded-lg p-6 md:p-8">
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div>
+                            <div className="flex items-center bg-zinc-950 border border-white/10 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500/50 focus-within:border-indigo-500/50 transition-all shadow-inner">
+                                <span className="pl-4 pr-3 text-zinc-500">
+                                    <Link2 size={20} />
+                                </span>
+                                <input 
+                                    type="url" 
+                                    required 
+                                    placeholder="https://your-very-long-url-goes-here.com" 
+                                    className="flex-1 w-full py-4 bg-transparent text-white focus:outline-none placeholder-zinc-600 font-medium" 
+                                    value={originalUrl} 
+                                    onChange={e => setOriginalUrl(e.target.value)} 
+                                />
+                            </div>
                         </div>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">Custom Alias (Optional)</label>
-                        <input type="text" placeholder="my-custom-link" className="block w-full px-4 py-3 bg-slate-900/50 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-primary rounded-md placeholder-slate-500 transition" value={customAlias} onChange={e => setCustomAlias(e.target.value)} />
-                    </div>
-                    
-                    {error && <div className="text-red-400 text-sm">{error}</div>}
-                    
-                    <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-primary to-accent hover:from-blue-600 hover:to-purple-600 text-white font-bold py-3 px-4 rounded-md transition duration-300 shadow-lg disabled:opacity-70">
-                        {loading ? 'Generating...' : 'Shorten URL'}
-                    </button>
-                </form>
-
-                {shortUrl && (
-                    <div className="mt-8 p-6 bg-slate-900 border border-slate-700 rounded-xl text-center">
-                        <p className="text-slate-400 mb-2">Your Short URL:</p>
-                        <a href={shortUrl} target="_blank" rel="noopener noreferrer" className="text-2xl font-bold text-primary hover:underline break-all">
-                            {shortUrl}
-                        </a>
-                        <div className="mt-4 flex justify-center">
-                            <button onClick={() => navigator.clipboard.writeText(shortUrl)} className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-md transition text-sm">
-                                Copy to Clipboard
-                            </button>
+                        
+                        <div className="flex flex-col md:flex-row gap-4 items-center">
+                            <div className="w-full md:w-2/3 flex items-center bg-zinc-950 border border-white/10 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500/50 transition-all">
+                                <span className="pl-4 pr-2 text-zinc-500 font-medium text-sm">
+                                    quicklink.com/
+                                </span>
+                                <input 
+                                    type="text" 
+                                    placeholder="custom-alias" 
+                                    className="flex-1 w-full py-3 bg-transparent text-white focus:outline-none placeholder-zinc-700 text-sm font-medium" 
+                                    value={customAlias} 
+                                    onChange={e => setCustomAlias(e.target.value)} 
+                                />
+                            </div>
+                            
+                            <motion.button 
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                type="submit" 
+                                disabled={loading} 
+                                className="w-full md:w-1/3 bg-white hover:bg-zinc-200 text-black font-bold py-3 px-6 rounded-xl transition shadow-[0_0_20px_rgba(255,255,255,0.3)] disabled:opacity-70 disabled:shadow-none flex items-center justify-center gap-2"
+                            >
+                                {loading ? (
+                                    <span className="flex items-center gap-2">
+                                        <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin"></div>
+                                        Shortening
+                                    </span>
+                                ) : (
+                                    <>Shorten <ChevronRight size={18} /></>
+                                )}
+                            </motion.button>
                         </div>
-                    </div>
-                )}
-            </div>
+                    </form>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-5xl">
-                <div className="glass p-6 text-center hover:-translate-y-1 transition duration-300">
-                    <div className="mx-auto bg-primary/20 w-16 h-16 rounded-full flex items-center justify-center mb-4 text-primary">
-                        <Zap size={32} />
-                    </div>
-                    <h3 className="text-xl font-bold mb-2">Lightning Fast</h3>
-                    <p className="text-slate-400">Powered by a custom C++ DSA module for instant short code generation.</p>
+                    <AnimatePresence>
+                        {shortUrl && (
+                            <motion.div 
+                                initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                                animate={{ opacity: 1, height: 'auto', marginTop: 32 }}
+                                exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                                className="overflow-hidden"
+                            >
+                                <div className="p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                                    <div className="flex-1 truncate w-full text-center sm:text-left">
+                                        <p className="text-xs text-indigo-300 font-semibold uppercase tracking-wider mb-1">Your new link is ready</p>
+                                        <a href={shortUrl} target="_blank" rel="noopener noreferrer" className="text-xl font-bold text-white hover:text-indigo-400 transition truncate block">
+                                            {shortUrl}
+                                        </a>
+                                    </div>
+                                    <motion.button 
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={handleCopy} 
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition ${copied ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/10 hover:bg-white/20 text-white'}`}
+                                    >
+                                        {copied ? <CheckCircle2 size={18} /> : <Copy size={18} />}
+                                        {copied ? 'Copied' : 'Copy'}
+                                    </motion.button>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
-                <div className="glass p-6 text-center hover:-translate-y-1 transition duration-300">
-                    <div className="mx-auto bg-accent/20 w-16 h-16 rounded-full flex items-center justify-center mb-4 text-accent">
-                        <BarChart3 size={32} />
+            </motion.div>
+
+            <motion.div 
+                initial="hidden"
+                whileInView="show"
+                viewport={{ once: true, margin: "-100px" }}
+                variants={containerVariants}
+                className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl relative z-10"
+            >
+                <motion.div variants={itemVariants} className="glass-panel p-8 group hover:-translate-y-2 transition duration-500">
+                    <div className="bg-indigo-500/10 w-14 h-14 rounded-2xl flex items-center justify-center mb-6 text-indigo-400 border border-indigo-500/20 group-hover:scale-110 transition duration-300">
+                        <Zap size={28} />
                     </div>
-                    <h3 className="text-xl font-bold mb-2">Detailed Analytics</h3>
-                    <p className="text-slate-400">Track clicks, referrers, locations, and device types in real-time.</p>
-                </div>
-                <div className="glass p-6 text-center hover:-translate-y-1 transition duration-300">
-                    <div className="mx-auto bg-emerald-500/20 w-16 h-16 rounded-full flex items-center justify-center mb-4 text-emerald-500">
-                        <Shield size={32} />
+                    <h3 className="text-xl font-bold mb-3 text-white">Lightning Fast</h3>
+                    <p className="text-zinc-400 font-medium text-sm leading-relaxed">Powered by a custom C++ DSA module, generating zero-collision Base62 hashes instantly.</p>
+                </motion.div>
+                
+                <motion.div variants={itemVariants} className="glass-panel p-8 group hover:-translate-y-2 transition duration-500">
+                    <div className="bg-purple-500/10 w-14 h-14 rounded-2xl flex items-center justify-center mb-6 text-purple-400 border border-purple-500/20 group-hover:scale-110 transition duration-300">
+                        <BarChart3 size={28} />
                     </div>
-                    <h3 className="text-xl font-bold mb-2">Secure</h3>
-                    <p className="text-slate-400">Protect your links with passwords, set expiry dates, and manage access.</p>
-                </div>
-            </div>
+                    <h3 className="text-xl font-bold mb-3 text-white">Advanced Analytics</h3>
+                    <p className="text-zinc-400 font-medium text-sm leading-relaxed">Track every click in real-time. View beautiful charts for devices, referrers, and locations.</p>
+                </motion.div>
+                
+                <motion.div variants={itemVariants} className="glass-panel p-8 group hover:-translate-y-2 transition duration-500">
+                    <div className="bg-emerald-500/10 w-14 h-14 rounded-2xl flex items-center justify-center mb-6 text-emerald-400 border border-emerald-500/20 group-hover:scale-110 transition duration-300">
+                        <Shield size={28} />
+                    </div>
+                    <h3 className="text-xl font-bold mb-3 text-white">Enterprise Security</h3>
+                    <p className="text-zinc-400 font-medium text-sm leading-relaxed">Password protect sensitive links, set expiration dates, and manage your data with ease.</p>
+                </motion.div>
+            </motion.div>
         </div>
     );
 }

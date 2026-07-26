@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { ArrowLeft, Globe, Monitor, Smartphone } from 'lucide-react';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
+import { ArrowLeft, Globe, Monitor, BarChart2, MousePointerClick, Clock } from 'lucide-react';
 import { format } from 'date-fns';
+import { motion } from 'framer-motion';
 import api from '../services/api';
 
 export default function Analytics() {
@@ -24,8 +25,20 @@ export default function Analytics() {
         fetchAnalytics();
     }, [id]);
 
-    if (loading) return <div className="text-center py-20 text-slate-300">Loading analytics...</div>;
-    if (!data) return <div className="text-center py-20 text-red-400">Failed to load analytics.</div>;
+    if (loading) return (
+        <div className="flex flex-col items-center justify-center py-32 text-zinc-400">
+            <div className="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin mb-4"></div>
+            Loading analytics data...
+        </div>
+    );
+    
+    if (!data) return (
+        <div className="text-center py-20">
+            <div className="bg-red-500/10 text-red-400 p-6 rounded-2xl inline-block border border-red-500/20">
+                Failed to load analytics. The link might have been deleted.
+            </div>
+        </div>
+    );
 
     const { url, totalClicks, logs } = data;
 
@@ -43,113 +56,215 @@ export default function Analytics() {
     const mobileClicks = logs.filter((l: any) => l.device === 'Mobile').length;
     const baseUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/api$/, '') : 'http://localhost:5000';
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        show: { opacity: 1, transition: { staggerChildren: 0.1 } }
+    };
+    
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        show: { opacity: 1, y: 0 }
+    };
+
     return (
-        <div className="py-8">
-            <Link to="/dashboard" className="inline-flex items-center text-slate-400 hover:text-white mb-6 transition">
-                <ArrowLeft size={16} className="mr-2" /> Back to Dashboard
-            </Link>
+        <motion.div 
+            initial="hidden"
+            animate="show"
+            variants={containerVariants}
+            className="py-8"
+        >
+            <motion.div variants={itemVariants} className="mb-8">
+                <Link to="/dashboard" className="inline-flex items-center text-zinc-400 hover:text-white mb-6 transition bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg border border-white/5 text-sm font-medium">
+                    <ArrowLeft size={16} className="mr-2" /> Back to Dashboard
+                </Link>
 
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold text-white">Analytics</h1>
-                    <a href={`${baseUrl}/${url.shortCode}`} target="_blank" rel="noreferrer" className="text-primary hover:underline mt-1 block">
-                        {baseUrl.replace(/^https?:\/\//, '')}/{url.shortCode}
-                    </a>
-                </div>
-                <div className="bg-slate-800/80 border border-slate-700 px-6 py-4 rounded-xl flex items-center shadow-lg">
-                    <div className="text-slate-400 mr-4">Total Clicks</div>
-                    <div className="text-4xl font-black text-white">{totalClicks}</div>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                {/* Chart spanning 2 cols */}
-                <div className="glass p-6 lg:col-span-2">
-                    <h3 className="text-xl font-bold mb-6 flex items-center text-slate-200">
-                        <BarChart2 size={20} className="mr-2 text-primary" /> Clicks Over Time
-                    </h3>
-                    <div className="h-72">
-                        {chartData.length > 0 ? (
-                            <ResponsiveContainer width="100%" height="100%">
-                                <LineChart data={chartData}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                    <XAxis dataKey="date" stroke="#94a3b8" />
-                                    <YAxis stroke="#94a3b8" allowDecimals={false} />
-                                    <Tooltip 
-                                        contentStyle={{ backgroundColor: '#1e293b', borderColor: '#475569', borderRadius: '8px' }}
-                                        itemStyle={{ color: '#3b82f6', fontWeight: 'bold' }}
-                                    />
-                                    <Line type="monotone" dataKey="clicks" stroke="#8b5cf6" strokeWidth={3} dot={{ r: 4, fill: '#8b5cf6' }} activeDot={{ r: 8 }} />
-                                </LineChart>
-                            </ResponsiveContainer>
-                        ) : (
-                            <div className="h-full flex items-center justify-center text-slate-500">No click data available yet.</div>
-                        )}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                    <div>
+                        <h1 className="text-4xl font-extrabold text-white tracking-tight mb-2">Analytics</h1>
+                        <div className="flex items-center gap-3">
+                            <span className="text-zinc-500 font-medium hidden sm:inline">Tracking:</span>
+                            <a href={`${baseUrl}/${url.shortCode}`} target="_blank" rel="noreferrer" className="text-indigo-400 hover:text-indigo-300 font-semibold bg-indigo-500/10 px-3 py-1 rounded-md transition border border-indigo-500/20 truncate max-w-[200px] sm:max-w-md">
+                                {baseUrl.replace(/^https?:\/\//, '')}/{url.shortCode}
+                            </a>
+                        </div>
                     </div>
-                </div>
-
-                {/* Breakdown col */}
-                <div className="space-y-6">
-                    <div className="glass p-6">
-                        <h3 className="text-lg font-bold mb-4 border-b border-slate-700 pb-2 text-slate-200">Device Breakdown</h3>
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-center">
-                                <div className="flex items-center text-slate-300"><Monitor size={18} className="mr-2 text-blue-400" /> Desktop</div>
-                                <span className="font-bold">{desktopClicks}</span>
-                            </div>
-                            <div className="w-full bg-slate-700 rounded-full h-2">
-                                <div className="bg-blue-400 h-2 rounded-full" style={{ width: `${totalClicks > 0 ? (desktopClicks/totalClicks)*100 : 0}%` }}></div>
-                            </div>
-                            
-                            <div className="flex justify-between items-center pt-2">
-                                <div className="flex items-center text-slate-300"><Smartphone size={18} className="mr-2 text-emerald-400" /> Mobile</div>
-                                <span className="font-bold">{mobileClicks}</span>
-                            </div>
-                            <div className="w-full bg-slate-700 rounded-full h-2">
-                                <div className="bg-emerald-400 h-2 rounded-full" style={{ width: `${totalClicks > 0 ? (mobileClicks/totalClicks)*100 : 0}%` }}></div>
-                            </div>
+                    <div className="bg-zinc-900 border border-white/10 px-6 py-4 rounded-2xl flex items-center shadow-2xl">
+                        <div className="w-12 h-12 bg-indigo-500/10 rounded-xl flex items-center justify-center mr-4 text-indigo-400 border border-indigo-500/20">
+                            <MousePointerClick size={24} />
+                        </div>
+                        <div>
+                            <div className="text-zinc-400 text-sm font-medium uppercase tracking-wider mb-1">Total Clicks</div>
+                            <div className="text-4xl font-black text-white leading-none">{totalClicks.toLocaleString()}</div>
                         </div>
                     </div>
                 </div>
+            </motion.div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                {/* Chart spanning 2 cols */}
+                <motion.div variants={itemVariants} className="glass-panel p-6 lg:col-span-2 shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 blur-3xl rounded-full pointer-events-none -mt-32 -mr-32"></div>
+                    
+                    <h3 className="text-xl font-bold mb-6 flex items-center text-white">
+                        <BarChart2 size={20} className="mr-2 text-indigo-400" /> Activity Over Time
+                    </h3>
+                    <div className="h-72 w-full">
+                        {chartData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={chartData}>
+                                    <defs>
+                                        <linearGradient id="colorClicks" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#818cf8" stopOpacity={0.3}/>
+                                            <stop offset="95%" stopColor="#818cf8" stopOpacity={0}/>
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
+                                    <XAxis 
+                                        dataKey="date" 
+                                        stroke="#71717a" 
+                                        tick={{fill: '#a1a1aa', fontSize: 12}} 
+                                        tickLine={false}
+                                        axisLine={false}
+                                        dy={10}
+                                    />
+                                    <YAxis 
+                                        stroke="#71717a" 
+                                        allowDecimals={false} 
+                                        tick={{fill: '#a1a1aa', fontSize: 12}}
+                                        tickLine={false}
+                                        axisLine={false}
+                                        dx={-10}
+                                    />
+                                    <Tooltip 
+                                        contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '12px', color: '#fff', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)' }}
+                                        itemStyle={{ color: '#818cf8', fontWeight: 'bold' }}
+                                        cursor={{ stroke: '#3f3f46', strokeWidth: 1, strokeDasharray: '5 5' }}
+                                    />
+                                    <Area 
+                                        type="monotone" 
+                                        dataKey="clicks" 
+                                        stroke="#818cf8" 
+                                        strokeWidth={3} 
+                                        fillOpacity={1} 
+                                        fill="url(#colorClicks)" 
+                                        activeDot={{ r: 6, fill: '#818cf8', stroke: '#fff', strokeWidth: 2 }}
+                                    />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="h-full flex flex-col items-center justify-center text-zinc-500">
+                                <BarChart2 size={48} className="mb-4 opacity-20" />
+                                No click data available yet.
+                            </div>
+                        )}
+                    </div>
+                </motion.div>
+
+                {/* Breakdown col */}
+                <motion.div variants={itemVariants} className="space-y-6">
+                    <div className="glass-panel p-6 shadow-2xl h-full relative overflow-hidden">
+                        <div className="absolute bottom-0 right-0 w-48 h-48 bg-purple-500/10 blur-3xl rounded-full pointer-events-none -mb-24 -mr-24"></div>
+                        
+                        <h3 className="text-lg font-bold mb-6 text-white flex items-center">
+                            <Monitor size={18} className="mr-2 text-purple-400" /> Device Breakdown
+                        </h3>
+                        
+                        <div className="space-y-8">
+                            <div>
+                                <div className="flex justify-between items-end mb-2">
+                                    <div className="flex items-center text-zinc-300 font-medium">
+                                        Desktop
+                                    </div>
+                                    <div className="text-right">
+                                        <span className="font-bold text-white text-lg">{desktopClicks}</span>
+                                        <span className="text-zinc-500 text-xs ml-2">{totalClicks > 0 ? Math.round((desktopClicks/totalClicks)*100) : 0}%</span>
+                                    </div>
+                                </div>
+                                <div className="w-full bg-zinc-800 rounded-full h-2.5 overflow-hidden border border-white/5">
+                                    <motion.div 
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${totalClicks > 0 ? (desktopClicks/totalClicks)*100 : 0}%` }}
+                                        transition={{ duration: 1, delay: 0.5 }}
+                                        className="bg-indigo-500 h-full rounded-full shadow-[0_0_10px_rgba(99,102,241,0.5)]"
+                                    />
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div className="flex justify-between items-end mb-2">
+                                    <div className="flex items-center text-zinc-300 font-medium">
+                                        Mobile
+                                    </div>
+                                    <div className="text-right">
+                                        <span className="font-bold text-white text-lg">{mobileClicks}</span>
+                                        <span className="text-zinc-500 text-xs ml-2">{totalClicks > 0 ? Math.round((mobileClicks/totalClicks)*100) : 0}%</span>
+                                    </div>
+                                </div>
+                                <div className="w-full bg-zinc-800 rounded-full h-2.5 overflow-hidden border border-white/5">
+                                    <motion.div 
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${totalClicks > 0 ? (mobileClicks/totalClicks)*100 : 0}%` }}
+                                        transition={{ duration: 1, delay: 0.7 }}
+                                        className="bg-purple-500 h-full rounded-full shadow-[0_0_10px_rgba(168,85,247,0.5)]"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
             </div>
 
-            <div className="glass overflow-hidden">
-                <div className="p-4 border-b border-slate-700">
-                    <h3 className="text-lg font-bold text-slate-200">Recent Click Log</h3>
+            <motion.div variants={itemVariants} className="glass-panel overflow-hidden border border-white/5 shadow-2xl">
+                <div className="p-6 border-b border-white/5 flex items-center justify-between bg-zinc-900/50">
+                    <h3 className="text-lg font-bold text-white flex items-center">
+                        <Clock size={18} className="mr-2 text-indigo-400" /> Recent Click Log
+                    </h3>
+                    <span className="text-xs font-medium text-zinc-500 bg-white/5 px-2 py-1 rounded-md border border-white/5">Showing last 10 clicks</span>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead>
-                            <tr className="bg-slate-800/50">
-                                <th className="p-4 text-sm text-slate-400 font-semibold">Time</th>
-                                <th className="p-4 text-sm text-slate-400 font-semibold">IP Address</th>
-                                <th className="p-4 text-sm text-slate-400 font-semibold">Browser</th>
-                                <th className="p-4 text-sm text-slate-400 font-semibold">Referrer</th>
+                            <tr className="bg-zinc-900/30 border-b border-white/5">
+                                <th className="p-5 text-xs text-zinc-500 font-bold uppercase tracking-wider">Time</th>
+                                <th className="p-5 text-xs text-zinc-500 font-bold uppercase tracking-wider hidden sm:table-cell">IP Address</th>
+                                <th className="p-5 text-xs text-zinc-500 font-bold uppercase tracking-wider">Browser</th>
+                                <th className="p-5 text-xs text-zinc-500 font-bold uppercase tracking-wider hidden md:table-cell">Referrer</th>
                             </tr>
                         </thead>
                         <tbody>
                             {logs.slice(0, 10).map((log: any, i: number) => (
-                                <tr key={i} className="border-b border-slate-700/50 hover:bg-slate-800/30">
-                                    <td className="p-4 text-slate-300 text-sm">{format(new Date(log.timestamp), 'MMM dd, yyyy HH:mm:ss')}</td>
-                                    <td className="p-4 text-slate-400 text-sm font-mono">{log.ip || 'Unknown'}</td>
-                                    <td className="p-4 text-slate-300 text-sm flex items-center">
-                                        <Globe size={14} className="mr-2 text-slate-400" /> {log.browser}
+                                <motion.tr 
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.2 + (i * 0.05) }}
+                                    key={i} 
+                                    className="border-b border-white/5 hover:bg-zinc-800/30 transition-colors"
+                                >
+                                    <td className="p-5 text-zinc-300 text-sm font-medium">{format(new Date(log.timestamp), 'MMM dd, yyyy HH:mm')}</td>
+                                    <td className="p-5 text-zinc-500 text-sm font-mono hidden sm:table-cell">{log.ip || 'Unknown'}</td>
+                                    <td className="p-5 text-zinc-300 text-sm">
+                                        <div className="flex items-center gap-2">
+                                            <Globe size={14} className="text-indigo-400" /> 
+                                            {log.browser}
+                                        </div>
                                     </td>
-                                    <td className="p-4 text-slate-400 text-sm truncate max-w-xs">{log.referrer || 'Direct'}</td>
-                                </tr>
+                                    <td className="p-5 text-zinc-400 text-sm truncate max-w-xs hidden md:table-cell">{log.referrer || 'Direct'}</td>
+                                </motion.tr>
                             ))}
                             {logs.length === 0 && (
                                 <tr>
-                                    <td colSpan={4} className="p-6 text-center text-slate-500">No clicks recorded.</td>
+                                    <td colSpan={4} className="p-12 text-center text-zinc-500">
+                                        <div className="flex flex-col items-center">
+                                            <MousePointerClick size={32} className="mb-3 opacity-20" />
+                                            No clicks recorded yet. Share your link to get started!
+                                        </div>
+                                    </td>
                                 </tr>
                             )}
                         </tbody>
                     </table>
                 </div>
-            </div>
-        </div>
+            </motion.div>
+        </motion.div>
     );
 }
-
-// Needed to avoid missing icon import error
-import { BarChart2 } from 'lucide-react';
