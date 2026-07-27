@@ -1,10 +1,10 @@
 import express from 'express';
-import { protect } from '../middleware/authMiddleware';
+import { authMiddleware } from '../middleware/authMiddleware';
 import { getApiKeys, createApiKey, deleteApiKey } from '../controllers/apiKeyController';
 
 const router = express.Router();
 
-router.use(protect);
+router.use(authMiddleware);
 
 router.get('/', getApiKeys);
 router.post('/', createApiKey);

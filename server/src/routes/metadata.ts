@@ -1,10 +1,10 @@
 import express from 'express';
-import { protect } from '../middleware/authMiddleware';
+import { authMiddleware } from '../middleware/authMiddleware';
 import { getFolders, createFolder, deleteFolder, getTags, createTag, deleteTag } from '../controllers/metadataController';
 
 const router = express.Router();
 
-router.use(protect);
+router.use(authMiddleware);
 
 router.get('/folders', getFolders);
 router.post('/folders', createFolder);
