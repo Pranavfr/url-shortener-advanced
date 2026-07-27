@@ -1,13 +1,17 @@
 import type { ReactNode } from 'react';
 import Navbar from './Navbar';
 import { Toaster } from 'react-hot-toast';
+import { useLocation } from 'react-router-dom';
 
 export default function Layout({ children }: { children: ReactNode }) {
+    const location = useLocation();
+    const hideNavbar = location.pathname.startsWith('/unlock') || location.pathname.startsWith('/bio/');
+
     return (
         <div className="min-h-screen mesh-bg">
             <div className="min-h-screen">
-                <Navbar />
-                <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 pt-8 relative z-10">
+                {!hideNavbar && <Navbar />}
+                <main className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 ${hideNavbar ? '' : 'pt-8'} relative z-10`}>
                     {children}
                 </main>
             </div>
