@@ -19,7 +19,7 @@ QuickLink/
 └── README.md
 ```
 
-## 🧠 DSA Implementation Details (C++)
+## 🧠 DSA Implementation Details (C++)-
 The core hashing logic avoids built-in `std::unordered_map` and relies on a completely custom implementation in `cpp/HashTable.cpp`.
 - **Hash Function**: Polynomial Rolling Hash converts a URL string into a 64-bit integer.
 - **Encoding**: Converts the 64-bit integer into a Base62 string (A-Z, a-z, 0-9).
