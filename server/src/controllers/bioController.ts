@@ -4,7 +4,7 @@ import { prisma } from '../utils/prisma';
 export const getBioPage = async (req: Request, res: Response): Promise<void> => {
     try {
         const bioPage = await prisma.bioPage.findUnique({
-            where: { userId: req.user!.userId },
+            where: { userId: req.user.id },
             include: { links: { orderBy: { order: 'asc' } } }
         });
         res.json(bioPage);
@@ -16,7 +16,7 @@ export const getBioPage = async (req: Request, res: Response): Promise<void> => 
 export const updateBioPage = async (req: Request, res: Response): Promise<void> => {
     try {
         const { username, title, description, theme, links } = req.body;
-        const userId = req.user!.userId;
+        const userId = req.user.id;
 
         // Check if username is taken
         const existingUser = await prisma.bioPage.findFirst({ where: { username } });

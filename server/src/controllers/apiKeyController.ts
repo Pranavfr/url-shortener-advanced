@@ -1,60 +1,55 @@
 import { Request, Response } from 'express';
 import { prisma } from '../utils/prisma';
-import { v4 as uuidv4 } from 'uuid';
+import crypto from 'crypto';
 
 export const getApiKeys = async (req: Request, res: Response): Promise<void> => {
     try {
-        const userId = req.user!.userId;
-        const keys = await prisma.apiKey.findMany({
-            where: { userId },
-            select: { id: true, name: true, createdAt: true, expiresAt: true, key: true } // Usually you wouldn't return full key, but for simple SaaS we can, or just return first few chars.
-        });
+        const userId = req.user.id;
+        const keys = await prisma.apiKey.findMany({ where: { userId } });
         res.json(keys);
     } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch API keys' });
+        res.status(500).json({ error: 'Server error' });
     }
 };
 
 export const createApiKey = async (req: Request, res: Response): Promise<void> => {
     try {
-        const userId = req.user!.userId;
         const { name } = req.body;
+        const userId = req.user.id;
         
-        if (!name) {
-            res.status(400).json({ error: 'Key name is required' });
-            return;
-        }
-
-        const keyString = 'qk_' + uuidv4().replace(/-/g, '');
-
-        const apiKey = await prisma.apiKey.create({
+        // Generate a random key
+        const keyString = 'qk_' + crypto.randomBytes(24).toString('hex');
+        
+        const key = await prisma.apiKey.create({
             data: {
-                userId,
                 name,
-                key: keyString
+                key: keyString,
+                userId
             }
         });
-
-        res.status(201).json(apiKey);
+        
+        // Only return full key on creation
+        res.status(201).json(key);
     } catch (error) {
-        res.status(500).json({ error: 'Failed to create API key' });
+        res.status(500).json({ error: 'Server error' });
     }
 };
 
 export const deleteApiKey = async (req: Request, res: Response): Promise<void> => {
     try {
-        const userId = req.user!.userId;
         const { id } = req.params;
+        const userId = req.user.id;
+        
+        const key = await prisma.apiKey.findFirst({ where: { id, userId } });
+        
+        if (!key) {
+            res.status(404).json({ error: 'API key not found' });
+            return;
+        }
 
-        await prisma.apiKey.deleteMany({
-            where: {
-                id,
-                userId
-            }
-        });
-
-        res.json({ message: 'API Key revoked' });
+        await prisma.apiKey.delete({ where: { id } });
+        res.json({ message: 'API key deleted' });
     } catch (error) {
-        res.status(500).json({ error: 'Failed to revoke API key' });
+        res.status(500).json({ error: 'Server error' });
     }
 };

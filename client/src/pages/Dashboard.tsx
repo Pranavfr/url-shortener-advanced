@@ -4,6 +4,7 @@ import { Copy, QrCode, BarChart2, Trash2, PowerOff, Search, Link as LinkIcon, Pl
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import { QRCodeCanvas } from 'qrcode.react';
 import api from '../services/api';
 
 interface Url {
@@ -119,13 +120,8 @@ export default function Dashboard() {
         }
     };
 
-    const showQR = async (id: string) => {
-        try {
-            const res = await api.get(`/url/qr/${id}`);
-            setQrCode(res.data.qrCode);
-        } catch (err) {
-            toast.error('Failed to load QR code');
-        }
+    const showQR = (code: string) => {
+        setQrCode(code);
     };
 
     const handleCopy = (code: string, id: string) => {
@@ -291,7 +287,7 @@ export default function Dashboard() {
                                                     <button onClick={() => handleCopy(url.shortCode, url.id)} className={`p-2 rounded-lg transition-colors ${copiedId === url.id ? 'text-emerald-400 bg-emerald-400/10' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700'}`} title="Copy">
                                                         {copiedId === url.id ? <CheckCircle2 size={18} /> : <Copy size={18} />}
                                                     </button>
-                                                    <button onClick={() => showQR(url.id)} className="p-2 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 rounded-lg transition-colors" title="QR Code">
+                                                    <button onClick={() => showQR(url.shortCode)} className="p-2 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 rounded-lg transition-colors" title="QR Code">
                                                         <QrCode size={18} />
                                                     </button>
                                                     <Link to={`/analytics/${url.id}`} className="p-2 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-lg transition-colors" title="Analytics">
@@ -403,17 +399,29 @@ export default function Dashboard() {
                             <h3 className="text-2xl font-bold text-white mb-2">QR Code Ready</h3>
                             <p className="text-zinc-400 text-sm mb-6">Scan this code to instantly visit your destination.</p>
                             
-                            <div className="bg-white p-4 rounded-xl mb-6">
-                                <img src={qrCode} alt="QR Code" className="w-full h-auto" />
+                            <div className="bg-white p-4 rounded-xl mb-6 flex justify-center">
+                                <QRCodeCanvas id="dashboard-qr" value={getShortUrl(qrCode)} size={200} fgColor="#000000" bgColor="#ffffff" level="Q" />
                             </div>
                             
                             <div className="flex gap-3">
                                 <button onClick={() => setQrCode(null)} className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white font-medium py-3 px-4 rounded-xl transition">
                                     Close
                                 </button>
-                                <a href={qrCode} download="qrcode.png" className="flex-1 bg-white hover:bg-zinc-200 text-black font-bold py-3 px-4 rounded-xl transition inline-flex items-center justify-center">
+                                <button 
+                                    onClick={() => {
+                                        const canvas = document.getElementById('dashboard-qr') as HTMLCanvasElement;
+                                        if (canvas) {
+                                            const pngUrl = canvas.toDataURL('image/png');
+                                            const downloadLink = document.createElement('a');
+                                            downloadLink.href = pngUrl;
+                                            downloadLink.download = 'quicklink-qr.png';
+                                            downloadLink.click();
+                                        }
+                                    }}
+                                    className="flex-1 bg-white hover:bg-zinc-200 text-black font-bold py-3 px-4 rounded-xl transition inline-flex items-center justify-center"
+                                >
                                     Download
-                                </a>
+                                </button>
                             </div>
                         </motion.div>
                     </motion.div>

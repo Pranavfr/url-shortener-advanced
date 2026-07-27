@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Link2, Zap, Shield, BarChart3, ChevronRight, Copy, CheckCircle2, Settings2, Lock, Clock, Tags } from 'lucide-react';
+import { Link2, Zap, Shield, BarChart3, ChevronRight, Copy, CheckCircle2, Settings2, Lock, Clock, Tags, QrCode } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { QRCodeSVG } from 'qrcode.react';
+import { QRCodeCanvas } from 'qrcode.react';
 import api from '../services/api';
 
 export default function Home() {
@@ -288,16 +288,32 @@ export default function Home() {
                                                 {copied ? <CheckCircle2 size={18} /> : <Copy size={18} />}
                                                 {copied ? 'Copied' : 'Copy'}
                                             </motion.button>
+                                            <button 
+                                                onClick={() => {
+                                                    const canvas = document.getElementById('qr-canvas') as HTMLCanvasElement;
+                                                    if (canvas) {
+                                                        const pngUrl = canvas.toDataURL('image/png');
+                                                        const downloadLink = document.createElement('a');
+                                                        downloadLink.href = pngUrl;
+                                                        downloadLink.download = 'quicklink-qr.png';
+                                                        downloadLink.click();
+                                                        toast.success('QR Code downloaded');
+                                                    }
+                                                }}
+                                                className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition bg-white/10 hover:bg-white/20 text-white"
+                                            >
+                                                <QrCode size={18} /> Save QR
+                                            </button>
                                             <a 
                                                 href={`/dashboard`}
-                                                className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition bg-white/10 hover:bg-white/20 text-white"
+                                                className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition bg-indigo-500 hover:bg-indigo-600 text-white"
                                             >
                                                 <BarChart3 size={18} /> Stats
                                             </a>
                                         </div>
                                     </div>
                                     <div className="bg-white p-3 rounded-xl flex-shrink-0">
-                                        <QRCodeSVG value={shortUrl} size={100} fgColor="#000000" bgColor="#ffffff" level="Q" />
+                                        <QRCodeCanvas id="qr-canvas" value={shortUrl} size={110} fgColor="#000000" bgColor="#ffffff" level="Q" />
                                     </div>
                                 </div>
                             </motion.div>
