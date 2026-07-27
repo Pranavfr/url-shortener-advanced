@@ -4,6 +4,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx src/index.ts",
+    "postinstall": "g++ ../cpp/main.cpp ../cpp/Base62.cpp ../cpp/HashTable.cpp -o ../cpp/hash_gen || echo 'C++ compilation skipped'",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
