@@ -142,7 +142,7 @@ export default function BioBuilder() {
                                             <button type="button" onClick={() => removeLink(index)} className="absolute top-4 right-4 text-zinc-500 hover:text-red-400 transition-colors"><Trash2 size={18} /></button>
                                             <div className="space-y-3 pr-8">
                                                 <input type="text" placeholder="Title (e.g. My Portfolio)" value={link.title} onChange={e => updateLink(index, 'title', e.target.value)} className="w-full py-2 px-3 bg-zinc-950 border border-white/5 rounded-lg text-white text-sm focus:outline-none focus:border-indigo-500/50" />
-                                                <input type="url" placeholder="URL (e.g. https://example.com)" value={link.url} onChange={e => updateLink(index, 'url', e.target.value)} className="w-full py-2 px-3 bg-zinc-950 border border-white/5 rounded-lg text-white text-sm focus:outline-none focus:border-indigo-500/50" />
+                                                <input type="text" placeholder="URL (e.g. https://example.com or example.com)" value={link.url} onChange={e => updateLink(index, 'url', e.target.value)} className="w-full py-2 px-3 bg-zinc-950 border border-white/5 rounded-lg text-white text-sm focus:outline-none focus:border-indigo-500/50" />
                                             </div>
                                         </motion.div>
                                     ))}

@@ -82,7 +82,7 @@ export default function BioPage() {
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.1 * i }}
                             key={link.id}
-                            href={link.url}
+                            href={link.url?.startsWith('http') ? link.url : `https://${link.url}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className={`block w-full p-4 rounded-2xl font-bold text-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center relative ${linkClass}`}
