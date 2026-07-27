@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link2, Zap, Shield, BarChart3, ChevronRight, Copy, CheckCircle2, Settings2, Lock, Clock } from 'lucide-react';
+import { Link2, Zap, Shield, BarChart3, ChevronRight, Copy, CheckCircle2, Settings2, Lock, Clock, Tags } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { QRCodeSVG } from 'qrcode.react';
@@ -10,7 +10,11 @@ export default function Home() {
     const [customAlias, setCustomAlias] = useState('');
     const [password, setPassword] = useState('');
     const [expiresAt, setExpiresAt] = useState('');
+    const [utmSource, setUtmSource] = useState('');
+    const [utmMedium, setUtmMedium] = useState('');
+    const [utmCampaign, setUtmCampaign] = useState('');
     const [showAdvanced, setShowAdvanced] = useState(false);
+    const [showUtm, setShowUtm] = useState(false);
     const [shortUrl, setShortUrl] = useState('');
     const [loading, setLoading] = useState(false);
     const [copied, setCopied] = useState(false);
@@ -20,7 +24,24 @@ export default function Home() {
         setLoading(true);
         setShortUrl('');
         try {
-            const payload: any = { originalUrl };
+            let finalUrl = originalUrl;
+            
+            // Build UTM query string
+            if (utmSource || utmMedium || utmCampaign) {
+                try {
+                    const urlObj = new URL(originalUrl);
+                    if (utmSource) urlObj.searchParams.set('utm_source', utmSource);
+                    if (utmMedium) urlObj.searchParams.set('utm_medium', utmMedium);
+                    if (utmCampaign) urlObj.searchParams.set('utm_campaign', utmCampaign);
+                    finalUrl = urlObj.toString();
+                } catch(e) {
+                    toast.error('Invalid URL for UTM parameters');
+                    setLoading(false);
+                    return;
+                }
+            }
+
+            const payload: any = { originalUrl: finalUrl };
             if (customAlias) payload.customAlias = customAlias;
             if (password) payload.password = password;
             if (expiresAt) payload.expiresAt = expiresAt;
@@ -182,6 +203,58 @@ export default function Home() {
                                                     className="flex-1 w-full py-3 pr-4 bg-transparent text-white focus:outline-none placeholder-zinc-700 text-sm font-medium [color-scheme:dark]" 
                                                     value={expiresAt} 
                                                     onChange={e => setExpiresAt(e.target.value)} 
+                                                />
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+
+                        <div>
+                            <button 
+                                type="button" 
+                                onClick={() => setShowUtm(!showUtm)}
+                                className="flex items-center gap-2 text-zinc-400 hover:text-white text-sm font-medium transition"
+                            >
+                                <Tags size={16} /> 
+                                {showUtm ? 'Hide UTM Builder' : 'UTM Campaign Builder'}
+                            </button>
+                            
+                            <AnimatePresence>
+                                {showUtm && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="overflow-hidden mt-4 space-y-4"
+                                    >
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div className="flex items-center bg-zinc-950 border border-white/10 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500/50 transition-all">
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="utm_source (e.g. google)" 
+                                                    className="flex-1 w-full py-3 px-4 bg-transparent text-white focus:outline-none placeholder-zinc-700 text-sm font-medium" 
+                                                    value={utmSource} 
+                                                    onChange={e => setUtmSource(e.target.value)} 
+                                                />
+                                            </div>
+                                            <div className="flex items-center bg-zinc-950 border border-white/10 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500/50 transition-all">
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="utm_medium (e.g. cpc)" 
+                                                    className="flex-1 w-full py-3 px-4 bg-transparent text-white focus:outline-none placeholder-zinc-700 text-sm font-medium" 
+                                                    value={utmMedium} 
+                                                    onChange={e => setUtmMedium(e.target.value)} 
+                                                />
+                                            </div>
+                                            <div className="flex items-center bg-zinc-950 border border-white/10 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500/50 transition-all">
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="utm_campaign (e.g. summer_sale)" 
+                                                    className="flex-1 w-full py-3 px-4 bg-transparent text-white focus:outline-none placeholder-zinc-700 text-sm font-medium" 
+                                                    value={utmCampaign} 
+                                                    onChange={e => setUtmCampaign(e.target.value)} 
                                                 />
                                             </div>
                                         </div>

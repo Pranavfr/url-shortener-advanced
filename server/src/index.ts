@@ -6,11 +6,15 @@ import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
 import { cppInvoker } from './utils/cppInvoker';
 import { prisma } from './utils/prisma';
+import { connectRedis } from './utils/redis';
 
 import authRoutes from './routes/auth';
 import urlRoutes from './routes/url';
 import analyticsRoutes from './routes/analytics';
 import redirectRoutes from './routes/redirect';
+import apiKeyRoutes from './routes/apiKeys';
+import metadataRoutes from './routes/metadata';
+import bioRoutes from './routes/bio';
 
 dotenv.config();
 
@@ -31,6 +35,9 @@ app.use(limiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/url', urlRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/keys', apiKeyRoutes);
+app.use('/api/meta', metadataRoutes);
+app.use('/api/bio', bioRoutes);
 
 // Redirect Route
 app.use('/', redirectRoutes);
@@ -52,6 +59,7 @@ const initCpp = async () => {
 
 app.listen(PORT, async () => {
     console.log(`Server running on port ${PORT}`);
+    await connectRedis();
     await initCpp();
 });
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Copy, QrCode, BarChart2, Trash2, PowerOff, Search, Link as LinkIcon, Plus, CheckCircle2 } from 'lucide-react';
+import { Copy, QrCode, BarChart2, Trash2, PowerOff, Search, Link as LinkIcon, Plus, CheckCircle2, Folder as FolderIcon, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -13,6 +13,18 @@ interface Url {
     clicks: number;
     createdAt: string;
     isDisabled: boolean;
+    folderId?: string;
+}
+
+interface Folder {
+    id: string;
+    name: string;
+}
+
+interface Tag {
+    id: string;
+    name: string;
+    color: string;
 }
 
 export default function Dashboard() {
@@ -21,10 +33,58 @@ export default function Dashboard() {
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(true);
     const [copiedId, setCopiedId] = useState<string | null>(null);
+    const [folders, setFolders] = useState<Folder[]>([]);
+    const [tags, setTags] = useState<Tag[]>([]);
+    const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+    const [newFolderName, setNewFolderName] = useState('');
+    const [showBulkUpload, setShowBulkUpload] = useState(false);
+    const [bulkUrls, setBulkUrls] = useState('');
 
     useEffect(() => {
         loadUrls();
+        loadMetadata();
     }, []);
+
+    const loadMetadata = async () => {
+        try {
+            const [foldersRes, tagsRes] = await Promise.all([
+                api.get('/meta/folders'),
+                api.get('/meta/tags')
+            ]);
+            setFolders(foldersRes.data);
+            setTags(tagsRes.data);
+        } catch (err) {
+            console.error('Failed to load metadata');
+        }
+    };
+
+    const handleCreateFolder = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newFolderName.trim()) return;
+        try {
+            const res = await api.post('/meta/folders', { name: newFolderName });
+            setFolders([...folders, res.data]);
+            setNewFolderName('');
+            toast.success('Folder created');
+        } catch (e) {
+            toast.error('Failed to create folder');
+        }
+    };
+
+    const handleBulkSubmit = async () => {
+        const urlsArray = bulkUrls.split('\n').filter(u => u.trim()).map(u => ({ originalUrl: u.trim() }));
+        if (urlsArray.length === 0) return toast.error('Please enter at least one URL');
+        
+        try {
+            await api.post('/url/bulk', { urls: urlsArray });
+            toast.success(`Successfully shortened ${urlsArray.length} URLs`);
+            setBulkUrls('');
+            setShowBulkUpload(false);
+            loadUrls();
+        } catch (e) {
+            toast.error('Failed to bulk process URLs');
+        }
+    };
 
     const loadUrls = async () => {
         try {
@@ -78,10 +138,12 @@ export default function Dashboard() {
     const baseUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/api$/, '') : 'http://localhost:5000';
     const getShortUrl = (code: string) => `${baseUrl}/${code}`;
 
-    const filteredUrls = urls.filter(u => 
-        u.shortCode.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        u.originalUrl.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredUrls = urls.filter(u => {
+        const matchesSearch = u.shortCode.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                              u.originalUrl.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesFolder = selectedFolderId ? u.folderId === selectedFolderId : true;
+        return matchesSearch && matchesFolder;
+    });
 
     return (
         <motion.div 
@@ -105,15 +167,69 @@ export default function Dashboard() {
                             className="w-full bg-zinc-900 border border-white/10 text-white rounded-xl pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all shadow-inner"
                         />
                     </div>
+                    <button onClick={() => setShowBulkUpload(true)} className="hidden md:flex items-center justify-center bg-zinc-800 hover:bg-zinc-700 text-white font-medium py-2 px-4 rounded-xl transition whitespace-nowrap">
+                        <Upload size={18} className="mr-2" /> Bulk
+                    </button>
                     <Link to="/" className="hidden md:flex items-center justify-center bg-white hover:bg-zinc-200 text-black font-bold py-2 px-4 rounded-xl transition shadow-[0_0_15px_rgba(255,255,255,0.2)] whitespace-nowrap">
                         <Plus size={18} className="mr-1" /> New Link
                     </Link>
                 </div>
             </div>
 
-            <div className="glass-panel overflow-hidden border border-white/5 shadow-2xl">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+            <div className="flex flex-col lg:flex-row gap-8">
+                {/* Sidebar */}
+                <div className="w-full lg:w-64 flex-shrink-0">
+                    <div className="glass-panel p-4 mb-6">
+                        <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-wider mb-4 px-2">Folders</h3>
+                        <ul className="space-y-1 mb-4">
+                            <li>
+                                <button 
+                                    onClick={() => setSelectedFolderId(null)}
+                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${selectedFolderId === null ? 'bg-indigo-500/20 text-indigo-400' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
+                                >
+                                    <FolderIcon size={16} /> All Links
+                                </button>
+                            </li>
+                            {folders.map(f => (
+                                <li key={f.id}>
+                                    <button 
+                                        onClick={() => setSelectedFolderId(f.id)}
+                                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${selectedFolderId === f.id ? 'bg-indigo-500/20 text-indigo-400' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
+                                    >
+                                        <FolderIcon size={16} /> {f.name}
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                        <form onSubmit={handleCreateFolder} className="px-2">
+                            <input 
+                                type="text"
+                                placeholder="+ New Folder"
+                                value={newFolderName}
+                                onChange={e => setNewFolderName(e.target.value)}
+                                className="w-full bg-transparent border-b border-white/10 py-1 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                            />
+                        </form>
+                    </div>
+
+                    <div className="glass-panel p-4">
+                        <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-wider mb-4 px-2">Tags</h3>
+                        <div className="flex flex-wrap gap-2 px-2">
+                            {tags.map(t => (
+                                <span key={t.id} className="text-xs font-bold px-2 py-1 rounded-md bg-zinc-800 text-white" style={{ borderLeft: `3px solid ${t.color}` }}>
+                                    {t.name}
+                                </span>
+                            ))}
+                            {tags.length === 0 && <span className="text-zinc-600 text-xs font-medium">No tags created</span>}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Main Content */}
+                <div className="flex-1 min-w-0">
+                    <div className="glass-panel overflow-hidden border border-white/5 shadow-2xl">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-zinc-900/50 border-b border-white/5 text-sm uppercase tracking-wider text-zinc-500 font-semibold">
                                 <th className="p-5 w-1/3">Short URL</th>
@@ -218,6 +334,52 @@ export default function Dashboard() {
                     </table>
                 </div>
             </div>
+            </div>
+            </div>
+
+            {/* Bulk Upload Modal */}
+            <AnimatePresence>
+                {showBulkUpload && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4" 
+                        onClick={() => setShowBulkUpload(false)}
+                    >
+                        <motion.div 
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.9, y: 20 }}
+                            className="bg-zinc-900 border border-white/10 p-8 rounded-2xl max-w-xl w-full shadow-2xl" 
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-2xl font-bold text-white">Bulk Shorten URLs</h3>
+                                <button onClick={() => setShowBulkUpload(false)} className="text-zinc-500 hover:text-white"><Trash2 size={20} /></button>
+                            </div>
+                            <p className="text-zinc-400 text-sm mb-4">Paste one URL per line to shorten multiple links at once.</p>
+                            
+                            <textarea
+                                value={bulkUrls}
+                                onChange={e => setBulkUrls(e.target.value)}
+                                rows={8}
+                                className="w-full bg-zinc-950 border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:border-indigo-500 font-mono text-sm mb-6"
+                                placeholder="https://example.com/1&#10;https://example.com/2"
+                            ></textarea>
+                            
+                            <div className="flex gap-3">
+                                <button onClick={() => setShowBulkUpload(false)} className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white font-medium py-3 px-4 rounded-xl transition">
+                                    Cancel
+                                </button>
+                                <button onClick={handleBulkSubmit} className="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-4 rounded-xl transition inline-flex items-center justify-center">
+                                    <Upload size={18} className="mr-2"/> Process Links
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <AnimatePresence>
                 {qrCode && (

@@ -8,6 +8,9 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Analytics from './pages/Analytics';
 import Unlock from './pages/Unlock';
+import Developer from './pages/Developer';
+import BioBuilder from './pages/BioBuilder';
+import BioPage from './pages/BioPage';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useContext(AuthContext);
@@ -44,6 +47,23 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+            <Route 
+              path="/developer" 
+              element={
+                <ProtectedRoute>
+                  <Developer />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/bio-builder" 
+              element={
+                <ProtectedRoute>
+                  <BioBuilder />
+                </ProtectedRoute>
+              } 
+            />
+            <Route path="/bio/:username" element={<BioPage />} />
             <Route path="*" element={<div className="text-center py-20 text-3xl font-bold text-white">404 - Page Not Found</div>} />
           </Routes>
         </Layout>

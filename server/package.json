@@ -23,6 +23,7 @@
     "morgan": "^1.11.0",
     "prisma": "^5.22.0",
     "qrcode": "^1.5.4",
+    "redis": "^6.1.0",
     "uuid": "^14.0.1",
     "zod": "^4.4.3"
   },
@@ -35,6 +36,7 @@
     "@types/morgan": "^1.9.10",
     "@types/node": "^26.1.1",
     "@types/qrcode": "^1.5.6",
+    "@types/redis": "^4.0.10",
     "@types/uuid": "^10.0.0",
     "nodemon": "^3.1.14",
     "ts-node": "^10.9.2",

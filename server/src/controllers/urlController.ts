@@ -46,6 +46,51 @@ export const createUrl = async (req: any, res: Response): Promise<void> => {
     }
 };
 
+export const bulkCreateUrl = async (req: any, res: Response): Promise<void> => {
+    try {
+        const { urls } = req.body;
+        const userId = req.user.id;
+
+        if (!Array.isArray(urls)) {
+            res.status(400).json({ error: 'urls must be an array' });
+            return;
+        }
+
+        const createdUrls = [];
+
+        for (const item of urls) {
+            const { originalUrl, customAlias, expiresAt, password } = item;
+            
+            let shortCode = customAlias;
+
+            if (customAlias) {
+                const existing = await prisma.url.findFirst({ where: { OR: [{ shortCode: customAlias }, { customAlias }] } });
+                if (existing) {
+                    continue; // Skip this one
+                }
+            } else {
+                shortCode = await cppInvoker.generateUnique(originalUrl);
+            }
+
+            const url = await prisma.url.create({
+                data: {
+                    originalUrl,
+                    shortCode: shortCode!,
+                    customAlias,
+                    expiresAt: expiresAt ? new Date(expiresAt) : null,
+                    password,
+                    userId
+                }
+            });
+            createdUrls.push(url);
+        }
+
+        res.status(201).json({ created: createdUrls.length, urls: createdUrls });
+    } catch (error: any) {
+        res.status(500).json({ error: 'Server error during bulk create' });
+    }
+};
+
 export const getUrls = async (req: any, res: Response): Promise<void> => {
     try {
         const urls = await prisma.url.findMany({

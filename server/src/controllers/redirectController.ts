@@ -1,14 +1,26 @@
 import { Request, Response } from 'express';
 import { prisma } from '../utils/prisma';
 import geoip from 'geoip-lite';
+import redisClient from '../utils/redis';
 
 export const redirectUrl = async (req: Request, res: Response): Promise<void> => {
     try {
         const { shortCode } = req.params;
         
-        const url = await prisma.url.findUnique({
-            where: { shortCode }
-        });
+        let url: any = null;
+        const cachedUrl = await redisClient.get(`url:${shortCode}`);
+        
+        if (cachedUrl) {
+            url = JSON.parse(cachedUrl);
+        } else {
+            url = await prisma.url.findUnique({
+                where: { shortCode }
+            });
+            if (url) {
+                // Cache for 1 hour
+                await redisClient.setEx(`url:${shortCode}`, 3600, JSON.stringify(url));
+            }
+        }
 
         if (!url) {
             res.status(404).json({ error: 'URL not found' });
@@ -20,7 +32,7 @@ export const redirectUrl = async (req: Request, res: Response): Promise<void> =>
             return;
         }
 
-        if (url.expiresAt && new Date() > url.expiresAt) {
+        if (url.expiresAt && new Date() > new Date(url.expiresAt)) {
             res.status(410).json({ error: 'URL has expired' });
             return;
         }
@@ -46,11 +58,31 @@ export const redirectUrl = async (req: Request, res: Response): Promise<void> =>
         else if (userAgent.includes('Safari')) browser = 'Safari';
 
         let device = 'Desktop';
+        let os = 'Unknown';
         if (/Mobi|Android/i.test(userAgent)) device = 'Mobile';
+        if (/Android/i.test(userAgent)) os = 'Android';
+        if (/iPhone|iPad|iPod/i.test(userAgent)) os = 'iOS';
 
         const clientIp = (req.headers['x-forwarded-for'] as string) || req.ip || req.socket.remoteAddress || '';
         const ipToResolve = clientIp.split(',')[0].trim();
         const geo = geoip.lookup(ipToResolve);
+
+        // Smart Routing Logic
+        let destinationUrl = url.originalUrl;
+        if (os === 'iOS' && url.iosUrl) {
+            destinationUrl = url.iosUrl;
+        } else if (os === 'Android' && url.androidUrl) {
+            destinationUrl = url.androidUrl;
+        } else if (url.geoRouting && geo?.country) {
+            try {
+                const geoMap = JSON.parse(url.geoRouting);
+                if (geoMap[geo.country]) {
+                    destinationUrl = geoMap[geo.country];
+                }
+            } catch (e) {
+                // Ignore invalid JSON
+            }
+        }
 
         await prisma.clickLog.create({
             data: {
@@ -65,7 +97,7 @@ export const redirectUrl = async (req: Request, res: Response): Promise<void> =>
             }
         });
 
-        res.redirect(url.originalUrl);
+        res.redirect(destinationUrl);
     } catch (error) {
         res.status(500).json({ error: 'Server error' });
     }

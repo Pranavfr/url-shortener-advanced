@@ -1,11 +1,13 @@
 import { useContext } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { Link2, LogOut, LayoutDashboard, Home, User } from 'lucide-react';
+import { ThemeContext } from '../context/ThemeContext';
+import { Link2, LogOut, LayoutDashboard, Home, User, Terminal, Sun, Moon } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function Navbar() {
     const { user, logout } = useContext(AuthContext);
+    const { theme, toggleTheme } = useContext(ThemeContext);
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -52,6 +54,18 @@ export default function Navbar() {
                                 >
                                     <LayoutDashboard size={16} /> <span className="hidden sm:inline">Dashboard</span>
                                 </Link>
+                                <Link 
+                                    to="/developer" 
+                                    className={`flex items-center gap-2 text-sm font-medium transition-colors ${isActive('/developer') ? 'text-indigo-400' : 'text-zinc-400 hover:text-zinc-100'}`}
+                                >
+                                    <Terminal size={16} /> <span className="hidden sm:inline">Developer</span>
+                                </Link>
+                                <Link 
+                                    to="/bio-builder" 
+                                    className={`flex items-center gap-2 text-sm font-medium transition-colors ${isActive('/bio-builder') ? 'text-indigo-400' : 'text-zinc-400 hover:text-zinc-100'}`}
+                                >
+                                    <User size={16} /> <span className="hidden sm:inline">Link in Bio</span>
+                                </Link>
                                 <div className="flex items-center space-x-4 ml-2 pl-6 border-l border-white/10">
                                     <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-full border border-white/10">
                                         <div className="bg-indigo-500/20 p-1 rounded-full"><User size={14} className="text-indigo-400"/></div>
@@ -76,6 +90,9 @@ export default function Navbar() {
                                 </Link>
                             </div>
                         )}
+                        <button onClick={toggleTheme} className="text-zinc-400 hover:text-white transition-colors ml-4 border-l border-white/10 pl-4">
+                            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                        </button>
                     </div>
                 </div>
             </div>
