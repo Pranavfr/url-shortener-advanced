@@ -101,7 +101,7 @@ export default function BioBuilder() {
                     className="space-y-6"
                 >
                     <form onSubmit={handleSave} className="space-y-6">
-                        <div className="glass-panel p-6">
+                        <div className="glass-premium p-6">
                             <h3 className="text-lg font-bold text-white mb-4 flex items-center"><Layout size={18} className="mr-2 text-indigo-400" /> Page Info</h3>
                             
                             <div className="space-y-4">
@@ -123,7 +123,7 @@ export default function BioBuilder() {
                             </div>
                         </div>
 
-                        <div className="glass-panel p-6">
+                        <div className="glass-premium p-6">
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-lg font-bold text-white flex items-center"><LinkIcon size={18} className="mr-2 text-indigo-400" /> Links</h3>
                                 <button type="button" onClick={addLink} className="text-sm font-medium text-indigo-400 hover:text-indigo-300 flex items-center"><Plus size={16} className="mr-1" /> Add Link</button>
@@ -151,7 +151,7 @@ export default function BioBuilder() {
                             </div>
                         </div>
 
-                        <div className="glass-panel p-6">
+                        <div className="glass-premium p-6">
                             <h3 className="text-lg font-bold text-white mb-4 flex items-center"><Palette size={18} className="mr-2 text-indigo-400" /> Theme</h3>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 {['dark', 'light', 'glass', 'minimal'].map(t => (
@@ -170,7 +170,7 @@ export default function BioBuilder() {
                         <button 
                             type="submit" 
                             disabled={saving}
-                            className="w-full bg-white hover:bg-zinc-200 text-black font-bold py-4 px-6 rounded-xl transition shadow-[0_0_20px_rgba(255,255,255,0.2)] disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-2 text-lg"
+                            className="w-full glow-button py-4 px-6 rounded-xl transition shadow-[0_0_20px_rgba(255,255,255,0.2)] disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-2 text-lg"
                         >
                             {saving ? 'Saving...' : <><Save size={20} /> Save Bio Page</>}
                         </button>
@@ -183,7 +183,7 @@ export default function BioBuilder() {
                     animate={{ opacity: 1, x: 0 }}
                     className="hidden lg:block relative"
                 >
-                    <div className="sticky top-24 w-[320px] h-[650px] mx-auto border-[12px] border-zinc-900 rounded-[3rem] overflow-hidden shadow-2xl bg-zinc-950 ring-1 ring-white/10">
+                    <div className="sticky top-32 w-[320px] h-[650px] mx-auto border-[12px] border-zinc-900 rounded-[3rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] bg-zinc-950 ring-1 ring-white/10">
                         {/* Phone Notch */}
                         <div className="absolute top-0 inset-x-0 h-6 bg-zinc-900 w-40 mx-auto rounded-b-xl z-20"></div>
                         

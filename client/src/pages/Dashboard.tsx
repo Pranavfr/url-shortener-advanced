@@ -149,7 +149,7 @@ export default function Dashboard() {
         >
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
                 <div>
-                    <h1 className="text-4xl font-extrabold text-white tracking-tight mb-2">Your Links</h1>
+                    <h1 className="text-4xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-zinc-400 tracking-tight mb-2">Your Links</h1>
                     <p className="text-zinc-400 font-medium">Manage, track, and analyze your shortened URLs.</p>
                 </div>
                 <div className="flex w-full md:w-auto items-center gap-4">
@@ -166,7 +166,7 @@ export default function Dashboard() {
                     <button onClick={() => setShowBulkUpload(true)} className="hidden md:flex items-center justify-center bg-zinc-800 hover:bg-zinc-700 text-white font-medium py-2 px-4 rounded-xl transition whitespace-nowrap">
                         <Upload size={18} className="mr-2" /> Bulk
                     </button>
-                    <Link to="/" className="hidden md:flex items-center justify-center bg-white hover:bg-zinc-200 text-black font-bold py-2 px-4 rounded-xl transition shadow-[0_0_15px_rgba(255,255,255,0.2)] whitespace-nowrap">
+                    <Link to="/" className="hidden md:flex items-center justify-center glow-button px-5 py-2 rounded-xl whitespace-nowrap">
                         <Plus size={18} className="mr-1" /> New Link
                     </Link>
                 </div>
@@ -175,7 +175,7 @@ export default function Dashboard() {
             <div className="flex flex-col lg:flex-row gap-8">
                 {/* Sidebar */}
                 <div className="w-full lg:w-64 flex-shrink-0">
-                    <div className="glass-panel p-4 mb-6">
+                    <div className="glass-premium p-4 mb-6">
                         <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-wider mb-4 px-2">Folders</h3>
                         <ul className="space-y-1 mb-4">
                             <li>
@@ -208,7 +208,7 @@ export default function Dashboard() {
                         </form>
                     </div>
 
-                    <div className="glass-panel p-4">
+                    <div className="glass-premium p-4">
                         <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-wider mb-4 px-2">Tags</h3>
                         <div className="flex flex-wrap gap-2 px-2">
                             {tags.map(t => (
@@ -223,7 +223,7 @@ export default function Dashboard() {
 
                 {/* Main Content */}
                 <div className="flex-1 min-w-0">
-                    <div className="glass-panel overflow-hidden border border-white/5 shadow-2xl">
+                    <div className="glass-premium overflow-hidden border border-white/5 shadow-2xl">
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                         <thead>
@@ -318,7 +318,7 @@ export default function Dashboard() {
                                             <h3 className="text-xl font-bold text-white mb-2">No links found</h3>
                                             <p className="text-zinc-400 mb-6">{searchQuery ? "Try adjusting your search terms." : "You haven't created any short links yet."}</p>
                                             {!searchQuery && (
-                                                <Link to="/" className="bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-2 px-6 rounded-lg transition-colors">
+                                                <Link to="/" className="glow-button py-2.5 px-6 rounded-xl transition-colors">
                                                     Create your first link
                                                 </Link>
                                             )}
@@ -347,7 +347,7 @@ export default function Dashboard() {
                             initial={{ scale: 0.9, y: 20 }}
                             animate={{ scale: 1, y: 0 }}
                             exit={{ scale: 0.9, y: 20 }}
-                            className="bg-zinc-900 border border-white/10 p-8 rounded-2xl max-w-xl w-full shadow-2xl" 
+                            className="glass-premium p-8 max-w-xl w-full" 
                             onClick={e => e.stopPropagation()}
                         >
                             <div className="flex justify-between items-center mb-6">
@@ -368,7 +368,7 @@ export default function Dashboard() {
                                 <button onClick={() => setShowBulkUpload(false)} className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white font-medium py-3 px-4 rounded-xl transition">
                                     Cancel
                                 </button>
-                                <button onClick={handleBulkSubmit} className="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-4 rounded-xl transition inline-flex items-center justify-center">
+                                <button onClick={handleBulkSubmit} className="flex-1 glow-button py-3 px-4 rounded-xl transition inline-flex items-center justify-center">
                                     <Upload size={18} className="mr-2"/> Process Links
                                 </button>
                             </div>
@@ -390,7 +390,7 @@ export default function Dashboard() {
                             initial={{ scale: 0.9, y: 20 }}
                             animate={{ scale: 1, y: 0 }}
                             exit={{ scale: 0.9, y: 20 }}
-                            className="bg-zinc-900 border border-white/10 p-8 rounded-2xl text-center max-w-sm w-full shadow-2xl" 
+                            className="glass-premium p-8 text-center max-w-sm w-full" 
                             onClick={e => e.stopPropagation()}
                         >
                             <div className="bg-zinc-800 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -418,7 +418,7 @@ export default function Dashboard() {
                                             downloadLink.click();
                                         }
                                     }}
-                                    className="flex-1 bg-white hover:bg-zinc-200 text-black font-bold py-3 px-4 rounded-xl transition inline-flex items-center justify-center"
+                                    className="flex-1 glow-button py-3 px-4 rounded-xl transition inline-flex items-center justify-center"
                                 >
                                     Download
                                 </button>

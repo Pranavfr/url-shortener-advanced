@@ -1,36 +1,63 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap');
 
 @theme {
-  --color-primary: #3b82f6;
-  --color-accent: #8b5cf6;
-  --color-background: #09090b; /* Deeper zinc for premium feel */
+  --color-background: #030305;
+  --color-surface: #0A0A0E;
+  --color-surfaceHighlight: #15151F;
+  --animate-blob: blob 7s infinite;
+  --animate-aurora: aurora 60s linear infinite;
+}
+
+@keyframes blob {
+  0% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+
+@keyframes aurora {
+  from { background-position: 50% 50%, 50% 50%; }
+  to { background-position: 350% 50%, 350% 50%; }
 }
 
 @layer base {
   body {
-    @apply bg-background text-slate-100 min-h-screen overflow-x-hidden;
+    @apply bg-background text-zinc-100 min-h-screen overflow-x-hidden antialiased selection:bg-indigo-500/30 selection:text-indigo-200;
     font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', system-ui, sans-serif;
+    letter-spacing: -0.02em;
   }
 }
 
 @layer utilities {
-  .glass {
-    @apply bg-zinc-900/40 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl;
+  .glass-premium {
+    @apply bg-surface/40 backdrop-blur-2xl border border-white/5 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.5)];
   }
   
   .glass-panel {
-    @apply bg-zinc-800/50 backdrop-blur-md border border-white/5 rounded-xl;
+    @apply bg-surfaceHighlight/30 backdrop-blur-lg border border-white/5 rounded-xl shadow-xl transition-all duration-300 hover:border-white/10 hover:bg-surfaceHighlight/50;
   }
 
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-500;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400;
+  }
+
+  .text-gradient-animated {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-indigo-400 bg-[length:200%_auto] animate-[aurora_8s_linear_infinite];
+  }
+  
+  .glow-button {
+    @apply relative overflow-hidden transition-all duration-300 bg-white text-black font-bold shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] hover:-translate-y-1 active:translate-y-0 active:scale-95;
   }
 
   .mesh-bg {
-    background-color: #09090b;
+    background-color: #030305;
     background-image: 
-      radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
-      radial-gradient(at 50% 0%, hsla(225,39%,30%,0.2) 0, transparent 50%), 
-      radial-gradient(at 100% 0%, hsla(339,49%,30%,0.2) 0, transparent 50%);
+      radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.08) 0%, transparent 50%);
   }
 }
